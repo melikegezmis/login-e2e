@@ -20,7 +20,8 @@ const initialForm = {
 
 const errorMessages = {
   email: 'Please enter a valid email address',
-  password: "Password must be at least 4 characters long and contain at least 1 uppercase letter, 1 lowercase letter, and 1 number.",
+  password: "Password must be at least 4 characters long and contain at least 1 uppercase letter, 1 lowercase letter and 1 number.",
+  hataliGiris: "Invalid email or password."
 };
 
 export default function Login() {
@@ -38,25 +39,26 @@ export default function Login() {
   useEffect(() => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{4,}$/;
-    
-    const isFormValid = emailRegex.test(form.email) &&
-    passwordRegex.test(form.password) &&
-    form.terms === true;
-    
-    setIsValid(isFormValid);
+
+    const emailError = !emailRegex.test(form.email);
+    const passwordError = !passwordRegex.test(form.password);
+    const termsError = !form.terms;
+
+    setErrors({
+      email: emailError,
+      password: passwordError,
+      terms: termsError,
+    });
+
+    setIsValid(!emailError && !passwordError && !termsError);
     
   }, [form]);
 
   const handleChange = (event) => {
     let { name, value, type } = event.target;
     value = type === 'checkbox' ? event.target.checked : value;
-    setForm({ ...form, [name]: value });
 
-    setErrors({
-      ...errors,
-      password: !/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{4,}$/.test(form.password),
-      email: !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)
-    })
+    setForm({ ...form, [name]: value });
   }
 
   const handleSubmit = (event) => {
@@ -66,7 +68,7 @@ export default function Login() {
     const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{4,}$/;
 
     if (!passwordRegex.test(form.password)) {
-      alert("Şifre en az 4 karakter olmalıdır ve 1 büyük harf, 1 küçük harf, 1 rakam içermelidir.");
+      alert("Şifre en az 4 karakter olmalıdır ve 1 büyük harf, 1 küçük harf ve 1 sayı içermelidir.");
     };
 
     if (!emailRegex.test(form.email)) {
@@ -83,6 +85,8 @@ export default function Login() {
           if (user) {
             setForm(initialForm);
             history.push('./success');
+          } else {
+            alert(errorMessages.hataliGiris)
           }
         }
       )
@@ -105,6 +109,7 @@ export default function Login() {
           onChange={handleChange}
           value={form.email}
           invalid={errors.email}
+          data-cy="email-input"
         />
         {errors.email && <FormFeedback>{errorMessages.email}</FormFeedback>}
       </FormGroup>
@@ -118,6 +123,7 @@ export default function Login() {
           onChange={handleChange}
           value={form.password}
           invalid={errors.password}
+          data-cy="password-input"
         />
         {errors.password && (
           <FormFeedback>{errorMessages.password}</FormFeedback>
@@ -130,13 +136,14 @@ export default function Login() {
           checked={form.terms}
           type="checkbox"
           onChange={handleChange}
+          data-cy="checkbox-input"
         />{' '}
         <Label htmlFor="terms" check>
           I agree to terms of service and privacy policy
         </Label>
       </FormGroup>
       <FormGroup className="text-center p-4">
-        <Button color="primary" disabled={!isValid}>
+        <Button color="primary" disabled={!isValid} data-cy="button-input">
           Sign In
         </Button>
       </FormGroup>
